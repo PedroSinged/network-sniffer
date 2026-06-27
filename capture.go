@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 )
 
 func StartCapture(handle *pcap.Handle) {
-	packetSource := handle.PacketSource()
+	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
 	for packet := range packetSource.Packets() {
 		// Tenta extrair camada de rede
