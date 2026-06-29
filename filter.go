@@ -1,10 +1,5 @@
 package main
 
-import (
-	"net"
-	"strconv"
-)
-
 type PacketFilter struct {
 	IP       string
 	Protocol string
