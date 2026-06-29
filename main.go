@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 
 	"github.com/google/gopacket/pcap"
@@ -31,17 +30,8 @@ func main() {
 	}
 	defer handle.Close()
 
-	fmt.Printf("Sniffing on %s...\n", *iface)
-	if *filterIP != "" {
-		fmt.Printf("Filter IP: %s\n", *filterIP)
-	}
-	if *filterProtocol != "" {
-		fmt.Printf("Filter Protocol: %s\n", *filterProtocol)
-	}
-	if *filterPort != 0 {
-		fmt.Printf("Filter Port: %d\n", *filterPort)
-	}
-	fmt.Println("Press Ctrl+C to stop\n")
+	// Exibe o banner
+	PrintBanner(*iface, filter)
 
 	// Começa a capturar
 	StartCapture(handle, filter)
