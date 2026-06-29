@@ -8,7 +8,7 @@ import (
 	"github.com/google/gopacket/pcap"
 )
 
-func StartCapture(handle *pcap.Handle, filter *PacketFilter) {
+func StartCapture(handle *pcap.Handle, filter *PacketFilter, logger *Logger) {
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
 	for packet := range packetSource.Packets() {
@@ -28,7 +28,7 @@ func StartCapture(handle *pcap.Handle, filter *PacketFilter) {
 			tcpLayer := packet.Layer(layers.LayerTypeTCP)
 			if tcpLayer != nil {
 				tcp, _ := tcpLayer.(*layers.TCP)
-				
+
 				// Verifica filtro de protocolo e porta
 				if !filter.MatchProtocol("tcp") {
 					continue
@@ -37,8 +37,12 @@ func StartCapture(handle *pcap.Handle, filter *PacketFilter) {
 					continue
 				}
 
-				fmt.Printf("[TCP] %s:%d -> %s:%d\n",
+				output := fmt.Sprintf("[TCP] %s:%d -> %s:%d",
 					ip.SrcIP, tcp.SrcPort, ip.DstIP, tcp.DstPort)
+				fmt.Println(output)
+				if logger != nil {
+					logger.Log(output)
+				}
 				continue
 			}
 
@@ -46,7 +50,7 @@ func StartCapture(handle *pcap.Handle, filter *PacketFilter) {
 			udpLayer := packet.Layer(layers.LayerTypeUDP)
 			if udpLayer != nil {
 				udp, _ := udpLayer.(*layers.UDP)
-				
+
 				// Verifica filtro de protocolo e porta
 				if !filter.MatchProtocol("udp") {
 					continue
@@ -55,14 +59,53 @@ func StartCapture(handle *pcap.Handle, filter *PacketFilter) {
 					continue
 				}
 
-				fmt.Printf("[UDP] %s:%d -> %s:%d\n",
+				// Tenta extrair DNS (UDP porta 53)
+				if udp.DstPort == 53 || udp.SrcPort == 53 {
+					dnsLayer := packet.Layer(layers.LayerTypeDNS)
+					if dnsLayer != nil {
+						dns, _ := dnsLayer.(*layers.DNS)
+
+						if IsDNSQuery(dns) {
+							domains := ParseDNSQuery(dns)
+							for _, domain := range domains {
+								output := fmt.Sprintf("[DNS-Query] client: %s:%d -> server: %s:53 | Domain: %s",
+									srcIP, udp.SrcPort, dstIP, domain)
+								fmt.Println(output)
+								if logger != nil {
+									logger.Log(output)
+								}
+							}
+						} else if IsDNSResponse(dns) {
+							responses := ParseDNSResponse(dns)
+							for domain, ip := range responses {
+								output := fmt.Sprintf("[DNS-Response] server: %s:53 -> client: %s:%d | Domain: %s | IP: %s",
+									srcIP, dstIP, udp.DstPort, domain, ip)
+								fmt.Println(output)
+								if logger != nil {
+									logger.Log(output)
+								}
+							}
+						}
+						continue
+					}
+				}
+
+				output := fmt.Sprintf("[UDP] %s:%d -> %s:%d",
 					ip.SrcIP, udp.SrcPort, ip.DstIP, udp.DstPort)
+				fmt.Println(output)
+				if logger != nil {
+					logger.Log(output)
+				}
 				continue
 			}
 
 			// Se não for TCP/UDP, só mostra se passar no filtro de protocolo
 			if !filter.MatchProtocol("") {
-				fmt.Printf("[%s] %s -> %s\n", ip.Protocol, ip.SrcIP, ip.DstIP)
+				output := fmt.Sprintf("[%s] %s -> %s", ip.Protocol, ip.SrcIP, ip.DstIP)
+				fmt.Println(output)
+				if logger != nil {
+					logger.Log(output)
+				}
 			}
 		}
 	}
