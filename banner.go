@@ -6,7 +6,7 @@ import (
 
 func PrintBanner(iface string, filter *PacketFilter) {
 	fmt.Println("╔════════════════════════════════════════════════════╗")
-	fmt.Println("║        Network Sniffer v0.3                        ║")
+	fmt.Println("║        Network Sniffer v0.5                        ║")
 	fmt.Println("║  Real-time packet capture and analysis             ║")
 	fmt.Println("║                                                    ║")
 	fmt.Println("║  Author: Pedro Trindade (@PedroSinged)             ║")
