@@ -2,7 +2,7 @@
 
 > A network packet sniffer built in Go with real-time analysis and filtering capabilities.
 
-![Status](https://img.shields.io/badge/status-v0.3-blue)
+![Status](https://img.shields.io/badge/status-v0.4-blue)
 ![Language](https://img.shields.io/badge/language-Go-00ADD8)
 
 ## Features
@@ -12,13 +12,14 @@
 - [x] TCP/UDP port extraction
 - [x] Protocol detection (TCP, UDP, ICMPv4, IGMP, etc)
 - [x] Filtering by IP, port, protocol
+- [x] Enhanced UI with banner
 - [ ] DNS parsing and analysis
 - [ ] HTTP parsing and analysis
 
 ## Build
 
 ```bash
-go build -o sniffer main.go capture.go filter.go
+go build -o sniffer main.go capture.go filter.go banner.go
 ```
 
 ## Usage
