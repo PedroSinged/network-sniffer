@@ -37,6 +37,34 @@ func StartCapture(handle *pcap.Handle, filter *PacketFilter, logger *Logger) {
 					continue
 				}
 
+				// Tenta extrair HTTP (porta 80 ou 443)
+				if tcp.DstPort == 80 || tcp.SrcPort == 80 || tcp.DstPort == 443 || tcp.SrcPort == 443 {
+					appLayer := packet.ApplicationLayer()
+					if appLayer != nil && IsHTTPPayload(appLayer.Payload()) {
+						httpInfo := ParseHTTPRequest(appLayer.Payload())
+						if httpInfo != nil && httpInfo.Method != "" {
+							output := fmt.Sprintf("[HTTP-Request] %s:%d -> %s:%d | Method: %s | Path: %s | Host: %s",
+								srcIP, tcp.SrcPort, dstIP, tcp.DstPort, httpInfo.Method, httpInfo.Path, httpInfo.Host)
+							fmt.Println(output)
+							if logger != nil {
+								logger.Log(output)
+							}
+							continue
+						}
+
+						httpResp := ParseHTTPResponse(appLayer.Payload())
+						if httpResp != nil && httpResp.Status != "" {
+							output := fmt.Sprintf("[HTTP-Response] %s:%d -> %s:%d | Status: %s",
+								srcIP, tcp.SrcPort, dstIP, tcp.DstPort, httpResp.Status)
+							fmt.Println(output)
+							if logger != nil {
+								logger.Log(output)
+							}
+							continue
+						}
+					}
+				}
+
 				output := fmt.Sprintf("[TCP] %s:%d -> %s:%d",
 					ip.SrcIP, tcp.SrcPort, ip.DstIP, tcp.DstPort)
 				fmt.Println(output)
