@@ -6,11 +6,11 @@ import (
 
 func PrintBanner(iface string, filter *PacketFilter) {
 	fmt.Println("╔════════════════════════════════════════════════════╗")
-	fmt.Println("║        Network Sniffer v0.5                        ║")
+	fmt.Println("║        Network Sniffer v0.6                        ║")
 	fmt.Println("║  Real-time packet capture and analysis             ║")
 	fmt.Println("║                                                    ║")
-	fmt.Println("║  Author: Pedro Trindade (@PedroSinged)             ║")
-	fmt.Println("║  GitHub: github.com/PedroSinged/network-sniffer    ║")
+	fmt.Println("║  Author: Pedro Trindade (@PedroSinged)            ║")
+	fmt.Println("║  GitHub: github.com/PedroSinged/network-sniffer   ║")
 	fmt.Println("╚════════════════════════════════════════════════════╝\n")
 
 	fmt.Printf("[*] Interface: %s\n", iface)
