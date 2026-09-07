@@ -10,6 +10,10 @@ All notable changes to this project are documented here. The format is based on
 - `-i` now resolves an index (`-i 4`) or a case-insensitive name substring
   (`-i realtek`) in addition to a full device name; unresolved values print the
   available interfaces.
+- Windows: `-i` also accepts the OS connection name (`-i Ethernet`, `-i "Wi-Fi"`),
+  resolved via `Get-NetAdapter` and cached for the process. `-list-interfaces`
+  shows these names. Non-Windows platforms and hosts without the cmdlet fall back
+  to substring matching with no error.
 
 ### Changed
 - Banner and session summary use ASCII rules instead of box-drawing characters

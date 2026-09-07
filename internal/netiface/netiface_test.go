@@ -7,7 +7,7 @@ import (
 
 func fixture() []Device {
 	return []Device{
-		{Name: `\Device\NPF_{CEC9BAA9}`, Description: "Realtek PCIe GbE Family Controller", Addrs: []string{"192.168.1.75"}},
+		{Name: `\Device\NPF_{CEC9BAA9}`, Description: "Realtek PCIe GbE Family Controller", Friendly: "Ethernet", Addrs: []string{"192.168.1.75"}},
 		{Name: `\Device\NPF_{AEBBC370}`, Description: "Bluetooth Device (Personal Area Network)"},
 		{Name: `\Device\NPF_Loopback`, Description: "Adapter for loopback traffic capture", Addrs: []string{"127.0.0.1"}},
 		{Name: `\Device\NPF_{062AF63E}`, Description: "WAN Miniport (IP)"},
@@ -40,6 +40,20 @@ func TestResolveByName(t *testing.T) {
 		if err != nil || got != want {
 			t.Fatalf("Resolve(%q) = %q, %v; want %q", in, got, err, want)
 		}
+	}
+}
+
+func TestResolveByConnectionName(t *testing.T) {
+	d := fixture()
+	for _, in := range []string{"Ethernet", "ethernet", "ETHERNET"} {
+		got, err := Resolve(in, d)
+		if err != nil || got != d[0].Name {
+			t.Fatalf("Resolve(%q) = %q, %v; want %q", in, got, err, d[0].Name)
+		}
+	}
+	// partial match on the connection name
+	if got, _ := Resolve("ether", d); got != d[0].Name {
+		t.Fatalf(`Resolve("ether") = %q`, got)
 	}
 }
 

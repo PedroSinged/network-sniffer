@@ -105,12 +105,13 @@ $ network-sniffer -list-interfaces
 `-i` accepts, in order of precedence:
 
 1. an **index** — `-i 4`
-2. an **exact device name** — `-i "\Device\NPF_{CEC9BAA9-...}"`
-3. a **case-insensitive substring** of the description or name — `-i realtek`, `-i loopback`, `-i eth`
+2. an **exact device name** — `-i "\Device\NPF_{CEC9BAA9-...}"` / `-i eth0`
+3. an **OS connection name** (Windows) — `-i Ethernet`, `-i "Wi-Fi"`
+   (resolved via `Get-NetAdapter`, cached; falls back silently if unavailable)
+4. a **case-insensitive substring** of the connection name, description, or
+   device name — `-i realtek`, `-i ethernet`, `-i loopback`
 
-On Windows the device names are `\Device\NPF_{GUID}` strings, so options 1 and 3
-are the practical ones. On Linux/macOS `-i eth0` / `-i en0` still work as exact
-names.
+On Linux/macOS options 1, 2 and 4 apply (`-i eth0`, `-i en0`, `-i wl`).
 
 ### Examples
 
@@ -155,6 +156,7 @@ internal/
   config/                option struct + validation
   event/                 the unified Event type every stage speaks
   filter/                IP/protocol/port matching + BPF generation
+  netiface/              interface listing + -i resolution (index/name/GUID)
   parser/                HTTP, DNS, TLS payload decoders
   geoip/                 MaxMind lookup (no-op when disabled)
   logger/                buffered file logging
