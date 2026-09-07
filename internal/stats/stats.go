@@ -114,7 +114,7 @@ func topN(m map[string]int, n int) []Pair {
 // String renders the human-readable session summary.
 func (r Report) String() string {
 	var b strings.Builder
-	b.WriteString("\n──────────── Session summary ────────────\n")
+	b.WriteString("\n------------ Session summary ------------\n")
 	fmt.Fprintf(&b, "Duration : %s\n", r.Duration.Round(time.Second))
 	fmt.Fprintf(&b, "Packets  : %d\n", r.Packets)
 	fmt.Fprintf(&b, "Bytes    : %d\n", r.Bytes)
@@ -143,6 +143,6 @@ func (r Report) String() string {
 			fmt.Fprintf(&b, "  %-40s %d\n", p.Name, p.Count)
 		}
 	}
-	b.WriteString("─────────────────────────────────────────\n")
+	b.WriteString("----------------------------------------\n")
 	return b.String()
 }

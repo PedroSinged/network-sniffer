@@ -3,6 +3,19 @@
 All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+- `-list-interfaces` prints every libpcap capture device with its name and addresses.
+- `-i` now resolves an index (`-i 4`) or a case-insensitive name substring
+  (`-i realtek`) in addition to a full device name; unresolved values print the
+  available interfaces.
+
+### Changed
+- Banner and session summary use ASCII rules instead of box-drawing characters
+  (legible on legacy Windows consoles).
+- IPv6 endpoints are bracketed in output (`[fe80::1]:53`).
+
 ## [1.0.0] - 2026-09-07
 
 ### Added

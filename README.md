@@ -70,7 +70,8 @@ sudo ./bin/network-sniffer -i eth0 [flags]
 
 | Flag | Default | Description |
 |---|---|---|
-| `-i` | `eth0` | Interface to capture on |
+| `-i` | `eth0` | Capture interface: index, partial name, or full device name (see below) |
+| `-list-interfaces` | | List capture interfaces and exit |
 | `-snaplen` | `65535` | Bytes captured per packet |
 | `-promisc` | `true` | Promiscuous mode |
 | `-ip` | – | Keep only traffic to/from this IP |
@@ -87,6 +88,29 @@ sudo ./bin/network-sniffer -i eth0 [flags]
 
 The filter flags are compiled into a BPF expression and pushed to the kernel,
 so filtered-out packets never reach the process.
+
+### Choosing an interface
+
+`-list-interfaces` prints what libpcap sees:
+
+```
+$ network-sniffer -list-interfaces
+[0] WAN Miniport (Network Monitor)
+    name: \Device\NPF_{DAEA23F5-...}
+[4] Realtek PCIe GbE Family Controller
+    name: \Device\NPF_{CEC9BAA9-...}
+    addr: 192.168.1.75, fe80::4385:...
+```
+
+`-i` accepts, in order of precedence:
+
+1. an **index** — `-i 4`
+2. an **exact device name** — `-i "\Device\NPF_{CEC9BAA9-...}"`
+3. a **case-insensitive substring** of the description or name — `-i realtek`, `-i loopback`, `-i eth`
+
+On Windows the device names are `\Device\NPF_{GUID}` strings, so options 1 and 3
+are the practical ones. On Linux/macOS `-i eth0` / `-i en0` still work as exact
+names.
 
 ### Examples
 

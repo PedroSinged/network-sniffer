@@ -18,7 +18,7 @@ const art = `
 // Print writes the banner and the active configuration to w.
 func Print(w io.Writer, version string, cfg config.Config) {
 	fmt.Fprint(w, art)
-	fmt.Fprintf(w, " network-sniffer v%s  ·  github.com/PedroSinged/network-sniffer\n\n", version)
+	fmt.Fprintf(w, " network-sniffer v%s  -  github.com/PedroSinged/network-sniffer\n\n", version)
 
 	fmt.Fprintf(w, " interface : %s\n", cfg.Interface)
 	fmt.Fprintf(w, " snaplen   : %d\n", cfg.SnapLen)
@@ -49,5 +49,5 @@ func Print(w io.Writer, version string, cfg config.Config) {
 	}
 
 	fmt.Fprint(w, "\n Capturing... press Ctrl+C to stop\n")
-	fmt.Fprintln(w, strings.Repeat("─", 72))
+	fmt.Fprintln(w, strings.Repeat("-", 72))
 }

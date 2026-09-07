@@ -77,12 +77,21 @@ type Event struct {
 	DstGeo *GeoInfo `json:"dst_geo,omitempty"`
 }
 
-// Endpoints renders the "src -> dst" portion, with ports when known.
+// Endpoints renders the "src -> dst" portion, with ports when known. IPv6
+// addresses are bracketed so the port stays unambiguous.
 func (e Event) Endpoints() string {
 	if e.SrcPort > 0 || e.DstPort > 0 {
-		return fmt.Sprintf("%s:%d -> %s:%d", e.SrcIP, e.SrcPort, e.DstIP, e.DstPort)
+		return fmt.Sprintf("%s:%d -> %s:%d",
+			hostport(e.SrcIP), e.SrcPort, hostport(e.DstIP), e.DstPort)
 	}
 	return fmt.Sprintf("%s -> %s", e.SrcIP, e.DstIP)
+}
+
+func hostport(ip string) string {
+	if strings.Contains(ip, ":") {
+		return "[" + ip + "]"
+	}
+	return ip
 }
 
 // Detail renders the protocol-specific summary shown after the endpoints.

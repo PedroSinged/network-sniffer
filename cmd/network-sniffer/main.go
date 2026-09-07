@@ -15,6 +15,7 @@ import (
 	"github.com/PedroSinged/network-sniffer/internal/filter"
 	"github.com/PedroSinged/network-sniffer/internal/geoip"
 	"github.com/PedroSinged/network-sniffer/internal/logger"
+	"github.com/PedroSinged/network-sniffer/internal/netiface"
 	"github.com/PedroSinged/network-sniffer/internal/sniffer"
 	"github.com/PedroSinged/network-sniffer/internal/stats"
 )
@@ -35,8 +36,10 @@ func run(args []string) error {
 	var (
 		cfg         config.Config
 		showVersion bool
+		listIfaces  bool
 	)
-	fs.StringVar(&cfg.Interface, "i", "eth0", "network interface to capture on")
+	fs.StringVar(&cfg.Interface, "i", "eth0", "capture interface: index, partial name, or full device name")
+	fs.BoolVar(&listIfaces, "list-interfaces", false, "list capture interfaces and exit")
 	fs.IntVar(&cfg.SnapLen, "snaplen", 65535, "capture length per packet in bytes")
 	fs.BoolVar(&cfg.Promiscuous, "promisc", true, "put the interface in promiscuous mode")
 	fs.StringVar(&cfg.FilterIP, "ip", "", "keep only traffic to/from this IP")
@@ -58,9 +61,28 @@ func run(args []string) error {
 		fmt.Printf("network-sniffer %s\n", version)
 		return nil
 	}
+
+	devices, err := netiface.List()
+	if err != nil {
+		return fmt.Errorf("list interfaces: %w", err)
+	}
+	if listIfaces {
+		fmt.Print(netiface.Format(devices))
+		return nil
+	}
+
 	if err := cfg.Validate(); err != nil {
 		return err
 	}
+
+	resolved, err := netiface.Resolve(cfg.Interface, devices)
+	if err != nil {
+		return err
+	}
+	if resolved != cfg.Interface {
+		fmt.Printf("interface  : %q -> %s\n", cfg.Interface, resolved)
+	}
+	cfg.Interface = resolved
 
 	pf, err := filter.New(cfg.FilterIP, cfg.FilterProtocol, cfg.FilterPort)
 	if err != nil {

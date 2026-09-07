@@ -16,6 +16,16 @@ func TestStringTCP(t *testing.T) {
 	}
 }
 
+func TestStringIPv6Bracketed(t *testing.T) {
+	e := Event{
+		Kind:  KindUDP,
+		SrcIP: "fe80::1", SrcPort: 52466, DstIP: "fe80::2", DstPort: 53,
+	}
+	if got := e.String(); got != "[UDP] [fe80::1]:52466 -> [fe80::2]:53" {
+		t.Fatalf("String() = %q", got)
+	}
+}
+
 func TestStringHTTPRequestWithGeo(t *testing.T) {
 	e := Event{
 		Kind:  KindHTTPRequest,
