@@ -3,7 +3,7 @@
 > Real-time network packet capture and analysis, written in Go.
 
 ![status](https://img.shields.io/badge/version-1.0.0-blue)
-![language](https://img.shields.io/badge/go-1.26-00ADD8)
+![language](https://img.shields.io/badge/go-1.23%2B-00ADD8)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
 `network-sniffer` captures live traffic from a network interface, decodes it,
@@ -37,7 +37,7 @@ session summary on exit.
 
 ### Requirements
 
-- Go 1.26+
+- Go 1.23+ (cgo enabled; a C compiler is required)
 - libpcap (Linux/macOS) or [Npcap](https://npcap.com/) (Windows)
   - Debian/Ubuntu: `sudo apt-get install libpcap-dev`
   - macOS: ships with libpcap
@@ -177,6 +177,18 @@ make cover     # tests + coverage total
 make vet       # go vet
 make lint      # vet + staticcheck (if installed)
 ```
+
+Tested packages carry unit tests at 73–96% statement coverage
+(`parser`, `filter`, `stats`, `event`, `netiface`); the capture loop is
+exercised manually and in CI.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

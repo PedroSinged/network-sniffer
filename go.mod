@@ -1,6 +1,6 @@
 module github.com/PedroSinged/network-sniffer
 
-go 1.26.4
+go 1.23
 
 require (
 	github.com/google/gopacket v1.1.19

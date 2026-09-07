@@ -3,24 +3,10 @@
 All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
-
-### Added
-- `-list-interfaces` prints every libpcap capture device with its name and addresses.
-- `-i` now resolves an index (`-i 4`) or a case-insensitive name substring
-  (`-i realtek`) in addition to a full device name; unresolved values print the
-  available interfaces.
-- Windows: `-i` also accepts the OS connection name (`-i Ethernet`, `-i "Wi-Fi"`),
-  resolved via `Get-NetAdapter` and cached for the process. `-list-interfaces`
-  shows these names. Non-Windows platforms and hosts without the cmdlet fall back
-  to substring matching with no error.
-
-### Changed
-- Banner and session summary use ASCII rules instead of box-drawing characters
-  (legible on legacy Windows consoles).
-- IPv6 endpoints are bracketed in output (`[fe80::1]:53`).
-
 ## [1.0.0] - 2026-09-07
+
+First tagged release. Restructures the project and adds protocol analysis,
+enrichment, export and a session summary on top of the earlier packet capture.
 
 ### Added
 - IPv6 capture alongside IPv4.
@@ -35,14 +21,22 @@ All notable changes to this project are documented here. The format is based on
   top talkers, top domains (`-stats`).
 - Graceful shutdown on SIGINT/SIGTERM with log and export flushing.
 - Coloured console output, disable with `-no-color`.
+- `-list-interfaces` lists every libpcap capture device with its name and addresses.
+- `-i` resolves an index (`-i 4`), a case-insensitive name substring (`-i realtek`),
+  or a full device name; on Windows it also accepts the OS connection name
+  (`-i Ethernet`, `-i "Wi-Fi"`) via a cached `Get-NetAdapter` lookup, falling back
+  to substring matching where the cmdlet is unavailable. Unresolved values print
+  the available interfaces.
 - `Makefile`, multi-stage `Dockerfile`, and GitHub Actions CI.
-- Unit tests for the parser, filter, stats, and event packages.
+- Unit tests for the parser, filter, stats, event, and netiface packages.
 
 ### Changed
 - Reorganised from a flat `package main` into `cmd/` + `internal/` packages.
 - All observations now flow through a single `event.Event` type.
 - Buffered, mutex-guarded file logging.
 - Capture interface flag renamed `-interface` → `-i`.
+- Console output is ASCII-only (legible on legacy Windows consoles); IPv6
+  endpoints are bracketed (`[fe80::1]:53`).
 
 ### Fixed
 - `go.mod` / `go.sum` did not declare `gopacket`; the project would not build.
