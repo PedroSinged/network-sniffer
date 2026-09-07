@@ -1,0 +1,112 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build ${{ matrix.goos }}/${{ matrix.goarch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            ext: ''
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            ext: ''
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            ext: '.exe'
+    runs-on: ${{ matrix.os }}
+    env:
+      CGO_ENABLED: '1'
+      GOOS: ${{ matrix.goos }}
+      GOARCH: ${{ matrix.goarch }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Install libpcap (Linux)
+        if: matrix.goos == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y libpcap-dev
+
+      - name: Install Npcap SDK (Windows)
+        if: matrix.goos == 'windows'
+        shell: pwsh
+        run: |
+          curl.exe -L -o "$env:RUNNER_TEMP\npcap-sdk.zip" https://npcap.com/dist/npcap-sdk-1.13.zip
+          Expand-Archive "$env:RUNNER_TEMP\npcap-sdk.zip" -DestinationPath "$env:RUNNER_TEMP\npcap-sdk"
+          "CGO_LDFLAGS=-L$env:RUNNER_TEMP\npcap-sdk\Lib\x64" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build
+        run: >
+          go build -trimpath
+          -ldflags "-s -w -X main.version=${{ github.ref_name }}"
+          -o "network-sniffer-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}"
+          ./cmd/network-sniffer
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: network-sniffer-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: network-sniffer-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+          retention-days: 7
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - run: ls -la dist
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          body: |
+            Real-time network packet capture and analysis, written in Go.
+
+            ## Downloads
+
+            | Platform | File |
+            |---|---|
+            | Linux (amd64) | `network-sniffer-linux-amd64` |
+            | macOS (arm64) | `network-sniffer-darwin-arm64` |
+            | Windows (amd64) | `network-sniffer-windows-amd64.exe` |
+
+            Binaries are dynamically linked against libpcap / Npcap — install
+            [Npcap](https://npcap.com/) (Windows) or `libpcap` (Linux) before running.
+
+            ```
+            ./network-sniffer-linux-amd64 -list-interfaces
+            ```
+
+            Full notes: [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CHANGELOG.md)
+
+            ---
+            Built by [@PedroSinged](https://github.com/PedroSinged) · [Pedro Trindade](https://www.linkedin.com/in/pedro-trindade-118282244/)

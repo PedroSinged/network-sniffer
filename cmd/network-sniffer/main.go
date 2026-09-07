@@ -20,8 +20,9 @@ import (
 	"github.com/PedroSinged/network-sniffer/internal/stats"
 )
 
-// version is overridable at build time: -ldflags "-X main.version=1.2.3".
-var version = "1.0.0"
+// version is set at build time via -ldflags "-X main.version=...".
+// `make build` derives it from `git describe`; release binaries use the tag.
+var version = "dev"
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
