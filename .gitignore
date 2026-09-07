@@ -1,0 +1,24 @@
+# Build output
+/bin/
+*.exe
+*.test
+
+# Runtime data
+/logs/
+*.log
+coverage.out
+coverage.html
+
+# GeoIP databases (download separately, see scripts/download-geoip.sh)
+*.mmdb
+*.tar.gz
+
+# Exports
+*.ndjson
+export.json
+export.csv
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/

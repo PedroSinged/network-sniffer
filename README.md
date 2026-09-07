@@ -1,76 +1,161 @@
-# Network Sniffer
+# network-sniffer
 
-> A network packet sniffer built in Go with real-time analysis and filtering capabilities.
+> Real-time network packet capture and analysis, written in Go.
 
-![Status](https://img.shields.io/badge/status-v0.5-blue)
-![Language](https://img.shields.io/badge/language-Go-00ADD8)
+![status](https://img.shields.io/badge/version-1.0.0-blue)
+![language](https://img.shields.io/badge/go-1.26-00ADD8)
+![license](https://img.shields.io/badge/license-MIT-green)
+
+`network-sniffer` captures live traffic from a network interface, decodes it,
+and prints a readable one-line summary per event. It recognises raw TCP/UDP,
+plaintext HTTP, DNS, and the TLS ClientHello (SNI), optionally enriches
+endpoints with GeoIP data, logs to disk, exports to JSON/CSV, and prints a
+session summary on exit.
+
+---
 
 ## Features
 
-- [x] Real-time packet capture
-- [x] IPv4 layer parsing
-- [x] TCP/UDP port extraction
-- [x] Protocol detection (TCP, UDP, ICMPv4, IGMP, etc)
-- [x] Filtering by IP, port, protocol
-- [x] Enhanced UI with banner
-- [x] DNS query and response parsing
-- [x] File logging (main log + session-based logs)
-- [ ] HTTP parsing and analysis
-- [ ] GeoIP integration
+| Area | Status |
+|---|---|
+| Live capture (IPv4 **and** IPv6) | ✅ |
+| Kernel-side BPF filtering by IP / protocol / port | ✅ |
+| Raw TCP / UDP endpoints | ✅ |
+| HTTP request & response parsing (method, path, host, user-agent, status) | ✅ |
+| DNS queries and responses (A, AAAA, CNAME, NS, PTR, TXT) | ✅ |
+| TLS ClientHello / SNI extraction | ✅ |
+| GeoIP enrichment (MaxMind GeoLite2) | ✅ (optional) |
+| File logging (persistent + per-session) | ✅ |
+| Export to NDJSON / CSV | ✅ |
+| Session summary (top talkers, top domains, counts) | ✅ |
+| Graceful shutdown on Ctrl+C / SIGTERM | ✅ |
+| Coloured console output | ✅ |
 
-## Build
+---
+
+## Install
+
+### Requirements
+
+- Go 1.26+
+- libpcap (Linux/macOS) or [Npcap](https://npcap.com/) (Windows)
+  - Debian/Ubuntu: `sudo apt-get install libpcap-dev`
+  - macOS: ships with libpcap
+- Capture privileges: run as root, or grant capabilities:
+  `sudo setcap cap_net_raw,cap_net_admin=eip ./bin/network-sniffer`
+
+### Build
 
 ```bash
-go build -o sniffer main.go capture.go filter.go banner.go dns.go logger.go
+make build           # -> bin/network-sniffer
+# or
+go build -o bin/network-sniffer ./cmd/network-sniffer
 ```
+
+### Docker
+
+```bash
+docker build -f deployments/Dockerfile -t network-sniffer .
+docker run --rm -it --net=host --cap-add=NET_RAW --cap-add=NET_ADMIN \
+  network-sniffer -i eth0
+```
+
+---
 
 ## Usage
 
 ```bash
-sudo ./sniffer -interface eth0 [options]
+sudo ./bin/network-sniffer -i eth0 [flags]
 ```
 
-### Options
+| Flag | Default | Description |
+|---|---|---|
+| `-i` | `eth0` | Interface to capture on |
+| `-snaplen` | `65535` | Bytes captured per packet |
+| `-promisc` | `true` | Promiscuous mode |
+| `-ip` | – | Keep only traffic to/from this IP |
+| `-protocol` | – | Keep only `tcp`, `udp`, `icmp`, or `icmp6` |
+| `-port` | – | Keep only traffic to/from this port |
+| `-no-color` | `false` | Disable ANSI colour |
+| `-log` | `false` | Write events to log files |
+| `-log-dir` | `logs` | Log directory |
+| `-export` | – | `json` (NDJSON) or `csv` |
+| `-out` | – | Export file path (required with `-export`) |
+| `-geoip` | – | Path to a MaxMind GeoLite2-City `.mmdb` |
+| `-stats` | `true` | Print session summary on exit |
+| `-version` | | Print version and exit |
 
-- `-interface string` - Network interface to sniff on (default: "eth0")
-- `-ip string` - Filter by source or destination IP
-- `-protocol string` - Filter by protocol (tcp, udp, icmp)
-- `-port int` - Filter by port number
-- `-log` - Enable logging to files (creates logs/ directory)
+The filter flags are compiled into a BPF expression and pushed to the kernel,
+so filtered-out packets never reach the process.
 
 ### Examples
 
-Capture all TCP traffic on port 443:
 ```bash
-sudo ./sniffer -interface eth0 -protocol tcp -port 443
+# All DNS traffic
+sudo ./bin/network-sniffer -i eth0 -protocol udp -port 53
+
+# HTTPS to one host, with GeoIP and JSON export
+sudo ./bin/network-sniffer -i eth0 -port 443 \
+  -geoip GeoLite2-City.mmdb -export json -out capture.ndjson
+
+# Everything to/from 8.8.8.8, logged to disk
+sudo ./bin/network-sniffer -i eth0 -ip 8.8.8.8 -log
 ```
 
-Capture traffic to/from a specific IP with logging:
-```bash
-sudo ./sniffer -interface eth0 -ip 8.8.8.8 -log
+### Output
+
+```
+[DNS-Query]        10.0.0.5:51314 -> 8.8.8.8:53 | Query: example.com
+[DNS-Response]     8.8.8.8:53 -> 10.0.0.5:51314 | Answer: example.com A 93.184.216.34
+[TLS-ClientHello]  10.0.0.5:44120 -> 93.184.216.34:443 | SNI: example.com | geo: ? -> Norwalk/US
+[HTTP-Request]     10.0.0.5:51500 -> 93.184.216.34:80 | GET / Host: example.com
 ```
 
-Capture all DNS traffic:
+### GeoIP database
+
+GeoIP is disabled unless `-geoip` points at a database. Download one with a
+free MaxMind license key:
+
 ```bash
-sudo ./sniffer -interface eth0 -protocol udp -port 53
+MAXMIND_LICENSE_KEY=xxxx ./scripts/download-geoip.sh
 ```
 
-### Output Format
+---
 
-- TCP packets: `[TCP] src_ip:src_port -> dst_ip:dst_port`
-- UDP packets: `[UDP] src_ip:src_port -> dst_ip:dst_port`
-- DNS Query: `[DNS-Query] client: src_ip:port -> server: dst_ip:53 | Domain: example.com`
-- DNS Response: `[DNS-Response] server: src_ip:53 -> client: dst_ip:port | Domain: example.com | IP: x.x.x.x`
-- Other protocols: `[PROTOCOL] src_ip -> dst_ip`
+## Project layout
 
-### Logging
+```
+cmd/network-sniffer/     entry point: flags, wiring, signal handling
+internal/
+  banner/                startup banner
+  config/                option struct + validation
+  event/                 the unified Event type every stage speaks
+  filter/                IP/protocol/port matching + BPF generation
+  parser/                HTTP, DNS, TLS payload decoders
+  geoip/                 MaxMind lookup (no-op when disabled)
+  logger/                buffered file logging
+  export/                NDJSON / CSV writers
+  stats/                 session aggregation
+  sniffer/               capture loop tying it together
+deployments/             Dockerfile
+scripts/                 helper scripts
+```
 
-When `-log` flag is used:
-- **Main log**: `logs/sniffer.log` (persistent across sessions)
-- **Session log**: `logs/sniffer_YYYY-MM-DD_HH-MM-SS.log` (per-session logs)
+---
 
-Each entry includes timestamp in format: `[YYYY-MM-DD HH:MM:SS]`
+## Development
+
+```bash
+make test      # go test ./...
+make cover     # tests + coverage total
+make vet       # go vet
+make lint      # vet + staticcheck (if installed)
+```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
 
 ## Author
 
-**Pedro** — [@PedroSinged](https://github.com/PedroSinged)
+Pedro Trindade — [@PedroSinged](https://github.com/PedroSinged)

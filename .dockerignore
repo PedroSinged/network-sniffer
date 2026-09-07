@@ -1,0 +1,7 @@
+.git
+bin/
+logs/
+*.out
+*.mmdb
+*.log
+CLAUDE_PROMPT.md
