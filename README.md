@@ -5,6 +5,9 @@
 ![status](https://img.shields.io/badge/version-1.0.0-blue)
 ![language](https://img.shields.io/badge/go-1.23%2B-00ADD8)
 ![license](https://img.shields.io/badge/license-MIT-green)
+[![Build Status](https://github.com/PedroSinged/network-sniffer/actions/workflows/ci.yml/badge.svg)](https://github.com/PedroSinged/network-sniffer/actions/workflows/ci.yml)
+[![Test Coverage](https://img.shields.io/badge/coverage-73--96%25-green)](https://github.com/PedroSinged/network-sniffer#development)
+[![GitHub Release](https://img.shields.io/github/v/release/PedroSinged/network-sniffer)](https://github.com/PedroSinged/network-sniffer/releases)
 
 `network-sniffer` captures live traffic from a network interface, decodes it,
 and prints a readable one-line summary per event. It recognises raw TCP/UDP,
